@@ -1,6 +1,7 @@
 package com.virtualpairprogrammers;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.log4j.Level;
@@ -31,19 +32,13 @@ public class Main {
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		
 		//Importing the data into RDDs from List
-		JavaRDD<String> originalLogMessages = sc.parallelize(inputData);
+		JavaRDD<String> sentences = sc.parallelize(inputData);
 		
-		JavaPairRDD<String, Long> pairRdd = originalLogMessages.mapToPair(rawValue -> {
-			String[] pairs = rawValue.split(":");
-			String levels = pairs[0];
-			return new Tuple2<String, Long>(levels, 1L);
-		});
-		//Printing to look how the data is arranged
-		pairRdd.foreach(value -> System.out.println(value));
 		
-		JavaPairRDD<String, Long> countRdd = pairRdd.reduceByKey((value1, value2)->value1 + value2);
-		countRdd.foreach(tuple -> System.out.println(tuple._1 + ": "+tuple._2));
+		//Converting the sentences RDD into a RDD containing individual words
+		JavaRDD<String> words = sentences.flatMap(value -> Arrays.asList(value.split(" ")).iterator());
 		
+		words.foreach(word-> System.out.println(word));
 		
 		sc.close();
 	}
