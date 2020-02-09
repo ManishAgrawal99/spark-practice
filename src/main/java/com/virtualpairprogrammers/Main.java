@@ -34,11 +34,12 @@ public class Main {
 		//Importing the data into RDDs from List
 		JavaRDD<String> sentences = sc.parallelize(inputData);
 		
-		
 		//Converting the sentences RDD into a RDD containing individual words
 		JavaRDD<String> words = sentences.flatMap(value -> Arrays.asList(value.split(" ")).iterator());
 		
-		words.foreach(word-> System.out.println(word));
+		JavaRDD<String> filteredWords = words.filter(word -> word.length()>1);
+		
+		filteredWords.foreach(word-> System.out.println(word));
 		
 		sc.close();
 	}
