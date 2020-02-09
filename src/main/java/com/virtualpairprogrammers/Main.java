@@ -27,12 +27,28 @@ public class Main {
 		//Importing the data into RDDs
 		JavaRDD<String> initialRdd = sc.textFile("src/main/resources/subtitles/input.txt");
 		
-		//Converting the sentences RDD into a RDD containing individual words
-		JavaRDD<String> words = initialRdd.flatMap(value -> Arrays.asList(value.split(" ")).iterator());
+		//Cleaning Data
+		JavaRDD<String> lettersOnlyRdd =  initialRdd.map(sentence -> sentence.replaceAll("[^a-zA-Z\\s]", "").toLowerCase());
+		JavaRDD<String> removedBlankLines = lettersOnlyRdd.filter((sentence)->sentence.trim().length()>1);
 		
-//		JavaRDD<String> filteredWords = words.filter(word -> word.length()>1);
+		//Converting sentences to words
+		JavaRDD<String> words = removedBlankLines.flatMap(sentence->Arrays.asList(sentence.split(" ")).iterator());
 		
-		words.foreach(word-> System.out.println(word));
+		//Filtering the words based on their uniqueness by using the Util.java helper class 
+		// that takes another list of words that are commonly used and are not that unique 
+		JavaRDD<String> interestingWords = words.filter((word)-> Util.isNotBoring(word) && word.length()>1);
+		
+		//Pairing the words with their frequencies
+		JavaPairRDD<String, Long> pairRdd = interestingWords.mapToPair(word -> new Tuple2<String, Long>(word, 1L));
+		JavaPairRDD<String, Long> countRdd = pairRdd.reduceByKey((value1, value2)-> value1+value2);
+		
+		JavaPairRDD<Long, String> switched = countRdd.mapToPair(tuple -> new Tuple2<Long, String>(tuple._2, tuple._1));
+		
+		//Sorting words by frequency
+		JavaPairRDD<Long, String> sorted = switched.sortByKey(false);
+		
+		List<Tuple2<Long, String>> results = sorted.take(10);
+		results.forEach(word-> System.out.println(word));
 		
 		sc.close();
 	}
