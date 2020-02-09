@@ -29,26 +29,8 @@ public class Main {
 		//Importing the data into RDDs from List
 		JavaRDD<Integer> myRdd = sc.parallelize(inputData);
 		
-		//Reducing the RDD to give the addition of all numbers
-		Integer result = myRdd.reduce((value1, value2)-> value1+value2);
-		
-		System.out.println(result);
-		
-		
 		//Mapping the RDDs into their square roots
-		JavaRDD<Double> sqrtRdd = myRdd.map((value)-> Math.sqrt(value));
-		
-		sqrtRdd.foreach((value)-> System.out.println(value));
-		
-		//Elements in RDD
-		System.out.println(sqrtRdd.count());
-		
-		//Using Map and Reduce
-		JavaRDD<Integer> countRdd = sqrtRdd.map((value)-> 1);
-		Integer count = countRdd.reduce((value1, value2)-> value1+value2);
-		System.out.println("The count using Map Reduce: "+count);
-		
-		
+		JavaRDD<IntegerWithSquareRoot> sqrtRdd = myRdd.map((value)-> new IntegerWithSquareRoot(value));
 		
 		sc.close();
 	}
