@@ -8,18 +8,17 @@ import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.Optional;
 
 import scala.Tuple2;
 
-/**
- * This class is used in the chapter late in the course where we analyse viewing figures.
- * You can ignore until then.
- */
 public class ViewingFigures 
 {
 	@SuppressWarnings("resource")
 	public static void main(String[] args)
 	{
+		
+		//Setting Up the project
 		System.setProperty("hadoop.home.dir", "c:/hadoop");
 		Logger.getLogger("org.apache").setLevel(Level.WARN);
 
@@ -29,19 +28,58 @@ public class ViewingFigures
 		// Use true to use hardcoded data identical to that in the PDF guide.
 		boolean testMode = true;
 		
+		
+		
+		
+		//Fetching data into RDDs from methods
 		JavaPairRDD<Integer, Integer> viewData = setUpViewDataRdd(sc, testMode);
 		JavaPairRDD<Integer, Integer> chapterData = setUpChapterDataRdd(sc, testMode);
 		JavaPairRDD<Integer, String> titlesData = setUpTitlesDataRdd(sc, testMode);
+		
+		
+		
 
 		// Number of chapters in each course
 		JavaPairRDD<Integer, Integer> swappedChapterData = chapterData.mapToPair(pair -> new Tuple2<Integer, Integer>(pair._2,1));
 		JavaPairRDD<Integer, Integer> countRdd = swappedChapterData.reduceByKey((value1, value2) -> value1+value2);
-		countRdd.foreach(pair -> System.out.println("CourseId: " + pair._1 + " Chapters: " + pair._2));
+		//countRdd.foreach(pair -> System.out.println("CourseId: " + pair._1 + " Chapters: " + pair._2));
+		
+		
+		
+		
+		//Removing Duplicated Views
+		viewData = viewData.distinct();
+		//viewData.foreach(view -> System.out.println(view));
+		
+		
+		
+		
+		//Joining ViewData and ChapterData
+		JavaPairRDD<Integer, Integer> swappedViewData = viewData.mapToPair((pair)-> new Tuple2<Integer, Integer>(pair._2, pair._1));
+		JavaPairRDD<Integer, Tuple2<Integer, Integer>> joinedData = swappedViewData.join(chapterData);
+		//joinedData.foreach(pair -> System.out.println(pair));
+		//Data of form <ChapterID, (UserID, CourseID)>
+		
+		
+		//Now userId is not useful
+		//We just want the count of number of chapters in a course viewed by a user
+		//We have a userId and courseId tuple and we need to count them
+		JavaPairRDD<Tuple2<Integer, Integer>, Integer> reversedJoinedData = joinedData.mapToPair((pair)-> new Tuple2<Tuple2<Integer, Integer>, Integer>(pair._2, 1));
+		JavaPairRDD<Tuple2<Integer, Integer>, Integer> userCourseChaptersViewedCount = reversedJoinedData.reduceByKey((value1, value2)-> value1+value2);
+		userCourseChaptersViewedCount.foreach((pair)-> System.out.println(pair));
+		//Data of form <(userID, CourseID), ChaptersViewedCount>
+		
 		
 		
 		sc.close();
 	}
 
+	
+	
+	
+	
+	
+	
 	private static JavaPairRDD<Integer, String> setUpTitlesDataRdd(JavaSparkContext sc, boolean testMode) {
 		
 		if (testMode)
