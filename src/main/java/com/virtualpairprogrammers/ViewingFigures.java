@@ -19,14 +19,14 @@ public class ViewingFigures
 	{
 		
 		//Setting Up the project
-		System.setProperty("hadoop.home.dir", "c:/hadoop");
+		System.setProperty("hadoop.home.dir", "c:/STUDY/hadoop");
 		Logger.getLogger("org.apache").setLevel(Level.WARN);
 
 		SparkConf conf = new SparkConf().setAppName("startingSpark").setMaster("local[*]");
 		JavaSparkContext sc = new JavaSparkContext(conf);
 		
 		// Use true to use hardcoded data identical to that in the PDF guide.
-		boolean testMode = true;
+		boolean testMode = false;
 		
 		
 		
@@ -61,13 +61,59 @@ public class ViewingFigures
 		//Data of form <ChapterID, (UserID, CourseID)>
 		
 		
-		//Now userId is not useful
+		//Now ChapterId is not useful
 		//We just want the count of number of chapters in a course viewed by a user
 		//We have a userId and courseId tuple and we need to count them
-		JavaPairRDD<Tuple2<Integer, Integer>, Integer> reversedJoinedData = joinedData.mapToPair((pair)-> new Tuple2<Tuple2<Integer, Integer>, Integer>(pair._2, 1));
-		JavaPairRDD<Tuple2<Integer, Integer>, Integer> userCourseChaptersViewedCount = reversedJoinedData.reduceByKey((value1, value2)-> value1+value2);
-		userCourseChaptersViewedCount.foreach((pair)-> System.out.println(pair));
+		JavaPairRDD<Tuple2<Integer, Integer>, Long> reversedJoinedData = joinedData.mapToPair((pair)-> new Tuple2<Tuple2<Integer, Integer>, Long>(pair._2, 1L));
+		JavaPairRDD<Tuple2<Integer, Integer>, Long> userCourseChaptersViewedCount = reversedJoinedData.reduceByKey((value1, value2)-> value1+value2);
+		//userCourseChaptersViewedCount.foreach((pair)-> System.out.println(pair));
 		//Data of form <(userID, CourseID), ChaptersViewedCount>
+		
+		
+		
+		//Now that we don't need the info on user we can drop it
+		JavaPairRDD<Integer, Long> courseViewedCount = userCourseChaptersViewedCount.mapToPair(row -> new Tuple2<Integer, Long>(row._1._2, row._2));
+		//courseViewedCount.foreach(row -> System.out.println(row));
+		//Data of form <CourseId, ChaptersViewedCount>
+		
+		
+		
+		//Getting ratio of chapters watched
+		JavaPairRDD<Integer, Tuple2<Long, Integer>> chaptersViewedOf =  courseViewedCount.join(countRdd);
+		//chaptersViewedOf.foreach(row -> System.out.println(row));
+		//Data of type <CourseID, (chaptersViewed, totalChapters)>
+		
+		
+		
+		//Converting to percentages
+		JavaPairRDD<Integer, Double> ratioedViews = chaptersViewedOf.mapValues(value -> (double) value._1/value._2);
+		//ratioedViews.foreach(row-> System.out.println(row));
+		//Data of Type <CourseId, ratio of watched chapters>
+		
+		
+		//Converting to Scores
+		JavaPairRDD<Integer, Long> individuallyScored = ratioedViews.mapValues(value -> {
+			if(value > 0.9) return 10L;
+			if(value > 0.5) return 4L;
+			if(value > 0.25) return 2L;
+			else return 0L;
+		});
+		//individuallyScored.foreach(row-> System.out.println(row));
+		//Data of type <CourseID, score>
+		
+		
+		
+		//Getting totaled Scores
+		JavaPairRDD<Integer, Long> courseScores = individuallyScored.reduceByKey((value1, value2)-> value1+value2);
+		//courseScores.foreach(row-> System.out.println(row));
+		//Data of type <CourseID, score>
+		
+		
+		//Getting the course title along
+		JavaPairRDD<Integer, Tuple2<Long, String>> titledScores = courseScores.join(titlesData);
+		JavaPairRDD<String, Long> finalScores = titledScores.mapToPair(row -> new Tuple2<String, Long>(row._2._2, row._2._1));
+		finalScores.foreach(row-> System.out.println(row));
+		
 		
 		
 		
@@ -84,7 +130,7 @@ public class ViewingFigures
 		
 		if (testMode)
 		{
-			// (chapterId, title)
+			// (courseId, title)
 			List<Tuple2<Integer, String>> rawTitles = new ArrayList<>();
 			rawTitles.add(new Tuple2<>(1, "How to find a better job"));
 			rawTitles.add(new Tuple2<>(2, "Work faster harder smarter until you drop"));
