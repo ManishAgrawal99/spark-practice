@@ -33,7 +33,10 @@ public class ViewingFigures
 		JavaPairRDD<Integer, Integer> chapterData = setUpChapterDataRdd(sc, testMode);
 		JavaPairRDD<Integer, String> titlesData = setUpTitlesDataRdd(sc, testMode);
 
-		
+		// Number of chapters in each course
+		JavaPairRDD<Integer, Integer> swappedChapterData = chapterData.mapToPair(pair -> new Tuple2<Integer, Integer>(pair._2,1));
+		JavaPairRDD<Integer, Integer> countRdd = swappedChapterData.reduceByKey((value1, value2) -> value1+value2);
+		countRdd.foreach(pair -> System.out.println("CourseId: " + pair._1 + " Chapters: " + pair._2));
 		
 		
 		sc.close();
