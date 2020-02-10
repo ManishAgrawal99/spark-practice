@@ -10,6 +10,7 @@ import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.api.java.Optional;
 
 import scala.Tuple2;
 
@@ -43,9 +44,12 @@ public class Main {
 		JavaPairRDD<Integer, String> users = sc.parallelizePairs(usersRaw);
 		
 		//Applying Inner Joins
-	 	JavaPairRDD<Integer, Tuple2<Integer, String>> joinedRdd = visits.join(users);
-	 	
-	 	joinedRdd.foreach(pair -> System.out.println("User Id: " + pair._1 + " name: " + pair._2._2 + " visits: " + pair._2._1));
+		//JavaPairRDD<Integer, Tuple2<Integer, String>> joinedRdd = visits.join(users);
+		//joinedRdd.foreach(pair -> System.out.println("User Id: " + pair._1 + " name: " + pair._2._2 + " visits: " + pair._2._1));
+		
+		//Applying Outer Join
+		JavaPairRDD<Integer, Tuple2<Integer, Optional<String>>> joinedRdd = visits.leftOuterJoin(users);
+		joinedRdd.foreach(pair-> System.out.println("UserId: "+pair._1+" name: "+pair._2._2.orElse("blank").toUpperCase() + " visits: "+ pair._2._1));
 		
 		sc.close();
 	}
