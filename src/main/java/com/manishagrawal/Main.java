@@ -18,11 +18,18 @@ public class Main {
 												   .config("spark.sql.warehouse.dir", "file:///c:/tmp/")
 												   .getOrCreate();
 		
+		
+		
+		//Reading a CSV file
 		Dataset<Row> dataset = spark.read().option("header", true).csv("src/main/resources/exams/students.csv");
 		
 		dataset.show();
+		//System.out.println(dataset.count() );
 		
-		System.out.println(dataset.count() );
+		
+		//Filtering Rows with subject as Modern Art
+		Dataset<Row> modernArtResults = dataset.filter("subject = 'Modern Art' AND year>=2007 ");
+		modernArtResults.show(); 
 		
 		spark.close();
 		
