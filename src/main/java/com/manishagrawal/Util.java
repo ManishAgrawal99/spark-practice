@@ -1,4 +1,4 @@
-package com.virtualpairprogrammers;
+package com.manishagrawal;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
