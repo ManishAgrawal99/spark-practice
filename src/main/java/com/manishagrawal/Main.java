@@ -47,6 +47,12 @@ public class Main {
 		Dataset<Row> dataset = spark.createDataFrame(inMemory, schema);
 		
 		dataset.show();
+		
+		//Using aggregation function in Spark SQL
+		dataset.createOrReplaceTempView("logging_table");
+		Dataset<Row> results = spark.sql("select level, count(datetime) as num from logging_table group by level order by num desc");
+		
+		results.show();
 		 
 		
 		spark.close();
