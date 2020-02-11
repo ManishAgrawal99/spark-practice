@@ -2,6 +2,7 @@ package com.manishagrawal;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.spark.sql.Column;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -30,9 +31,14 @@ public class Main {
 		//Filtering Rows with subject as Modern Art
 		//Dataset<Row> modernArtResults = dataset.filter("subject = 'Modern Art' AND year>=2007 ");
 		
-		Dataset<Row> modernArtResults = dataset.filter((row) ->{
-			return row.getAs("subject").equals("Modern Art") && Integer.parseInt(row.getAs("year")) > 2007;
-		});
+		Column subjectColumn = dataset.col("subject");
+		Column yearColumn = dataset.col("year");
+		Column scoreColumn = dataset.col("score");
+		
+		Dataset<Row> modernArtResults = dataset.filter(subjectColumn.equalTo("Modern Art").and(
+													   yearColumn.geq(2007).and(
+													   scoreColumn.geq(90)
+													   )));
 		
 		modernArtResults.show(); 
 		
