@@ -2,13 +2,13 @@ package com.virtualpairprogrammers;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.Optional;
 
 import scala.Tuple2;
 
@@ -115,6 +115,8 @@ public class ViewingFigures
 		finalScores.foreach(row-> System.out.println(row));
 		
 		
+		Scanner scanner = new Scanner(System.in);
+		scanner.nextLine();
 		
 		
 		sc.close();

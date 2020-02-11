@@ -3,6 +3,7 @@ package com.virtualpairprogrammers;
 public class IntegerWithSquareRoot {
 	
 	private int origialNumber;
+	@SuppressWarnings("unused")
 	private double squareRoot;
 
 	public IntegerWithSquareRoot(int i) {
