@@ -29,18 +29,14 @@ public class Main {
 		
 		
 		//Filtering Rows with subject as Modern Art
-		//Dataset<Row> modernArtResults = dataset.filter("subject = 'Modern Art' AND year>=2007 ");
+		Dataset<Row> modernArtResults = dataset.filter("subject = 'Modern Art' AND year>=2007 ");
 		
-		Column subjectColumn = dataset.col("subject");
-		Column yearColumn = dataset.col("year");
-		Column scoreColumn = dataset.col("score");
+		//Setting up spark to use sql queries
+		dataset.createOrReplaceTempView("my_students_table");
+		Dataset<Row> results = spark.sql("select distinct(year) from my_students_table order by year desc");
 		
-		Dataset<Row> modernArtResults = dataset.filter(subjectColumn.equalTo("Modern Art").and(
-													   yearColumn.geq(2007).and(
-													   scoreColumn.geq(90)
-													   )));
 		
-		modernArtResults.show(); 
+		results.show(); 
 		
 		spark.close();
 		
