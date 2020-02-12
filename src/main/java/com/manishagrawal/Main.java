@@ -50,7 +50,11 @@ public class Main {
 		
 		//Using aggregation function in Spark SQL
 		dataset.createOrReplaceTempView("logging_table");
-		Dataset<Row> results = spark.sql("select level, count(datetime) as num from logging_table group by level order by num desc");
+		Dataset<Row> results = spark.sql("select level, date_format(datetime, 'MMMM') as month from logging_table");
+		
+		//Creating a new view
+		results.createOrReplaceTempView("logging_table");
+		results = spark.sql("select level, month, count(1) as total from logging_table group by level, month");
 		
 		results.show();
 		 
