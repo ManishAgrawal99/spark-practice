@@ -9,6 +9,9 @@ import org.apache.spark.sql.types.DataTypes;
 
 import static org.apache.spark.sql.functions.*;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class Main {
 
 	public static void main(String[] args) {
@@ -39,11 +42,14 @@ public class Main {
 								 date_format(col("datetime"), "MMMM").alias("month"), 
 								 date_format(col("datetime"), "MM").alias("monthnum").cast(DataTypes.IntegerType)
 								 );
-		dataset = dataset.groupBy(col("level"), col("month"), col("monthnum")).count();
-		dataset = dataset.orderBy(col("monthnum"), col("level"));
-		dataset = dataset.drop(col("monthnum"));
 		
-		dataset.show(100);
+		Object[] months = new Object[] {"January", "February", "March", "April", "May", "June", "July", "August", "Blala", "September", "October", "November", "December"};
+		List<Object> columns = Arrays.asList(months);
+		
+		//Pivoting
+		dataset = dataset.groupBy("level").pivot("month", columns).count().na().fill(0);
+		
+		dataset.show();
 		
 		spark.close();
 		
