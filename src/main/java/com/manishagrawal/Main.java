@@ -25,29 +25,11 @@ public class Main {
 												   .getOrCreate();
 		
 		//Reading the log file
-		Dataset<Row> dataset = spark.read().option("header", true).csv("src/main/resources/biglog.txt");
+		Dataset<Row> dataset = spark.read().option("header", true).csv("src/main/resources/exams/students.csv");
 		
-		
-		
-		//Using aggregation function in Spark SQL
-		//dataset.createOrReplaceTempView("logging_table");
-		//Dataset<Row> results = spark.sql
-		//		("select level, date_format(datetime, 'MMMM') as month, cast(first(date_format(datetime, 'M')) as int) as monthnum, count(1) as total "
-		//		+ "from logging_table "
-		//		+ "group by level, month order by monthnum, level"
-		//			);
-		//results.show(100);
-		
-		dataset = dataset.select(col("level"), 
-								 date_format(col("datetime"), "MMMM").alias("month"), 
-								 date_format(col("datetime"), "MM").alias("monthnum").cast(DataTypes.IntegerType)
-								 );
-		
-		Object[] months = new Object[] {"January", "February", "March", "April", "May", "June", "July", "August", "Blala", "September", "October", "November", "December"};
-		List<Object> columns = Arrays.asList(months);
-		
-		//Pivoting
-		dataset = dataset.groupBy("level").pivot("month", columns).count().na().fill(0);
+		dataset = dataset.groupBy("subject").pivot("year").agg( round( avg(col("score")) , 2).alias("avg"),
+																round( stddev(col("score")) , 2).alias("std dev")
+															);
 		
 		dataset.show();
 		
